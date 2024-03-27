@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Page</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="container">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <input type="text" id="username" name="username" placeholder="Username">
+      <input type="password" id="password" name="password" placeholder="Password">
+      <input type="submit" value="Login">
+      <a id="newUser" href="createUser.html">Not a user? Create a account!</a>
+    </form>
+
+    <script>
+      //Event Listener for the login submit button
+      document.getElementById("loginForm").addEventListener("submit", function (event) {
+        //Prevent default action from submit (submitting the form, we will handle that)
+        event.preventDefault();
+        //When clicked attempt to login with the entered info using our function
+        loginUser();
+      });
+
+
+      /** Function will take the data entered by the user (username and password) and call an AWS lambda function
+       *  that will see if the user information is valid in the db. Based on the response from AWS, the function 
+       *  will either redirect to our successful login page or alert the user that the login failed (invalid info or API/AWS/SQL error)
+       * */
+      function loginUser() {
+        // Get username and password from form fields
+        var username = document.getElementById("username").value;
+        var password = document.getElementById("password").value;
+
+        //The user object from what is currently in the form
+        var requestBody = {
+          username: username,
+          password: password
+        };
+
+        // Convert the request body to JSON
+        var jsonBody = JSON.stringify(requestBody);
+
+        //Gateway url
+        api_url = 'https://ywdchuyoag.execute-api.us-east-1.amazonaws.com/default/LambdaFunctionWithRDS'
+
+        // Make POST request to API Gateway endpoint containing our user's data
+        fetch(api_url, {
+          method: 'POST',
+          body: jsonBody,
+        })
+          //Get the response from the API
+          .then(response => response.json())
+          //Look ath the response data from the API
+          .then(data => {
+            // Handle response from Lambda function
+            if (data.success) {
+              // Redirect to the successful login page
+              window.location.href = "successfulLogin.html";
+            } else {
+              alert("Login failed: " + data.message);
+            }
+          })
+          //Catch any errors that are thrown when fetching the API response
+          .catch(error => {
+            console.error('Error:', error);
+            alert("An error occurred. Please try again later.");
+          });
+      }
+    </script>
+</body>
+
+</html>

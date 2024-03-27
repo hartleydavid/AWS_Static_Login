@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create your Account</title>
+    <link rel="stylesheet" href="styles.css">
+    <!--Alterations to the css file -->
+    <style>
+        input[type="submit"] {
+            background-color: #3524c5;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #15078f;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>New User</h2>
+        <form id="createUser">
+            <input type="text" id="username" name="username" placeholder="Your Username">
+            <input type="password" id="password" name="password" placeholder="Your Password">
+            <!-- Possible Show Password
+                <div class="password-container">
+                <input type="password" id="password" name="password" placeholder="Your Password">
+                <span class="password-toggle" onclick="togglePassword()">Show</span>
+            </div>-->
+            <input type="submit" value="Create Account">
+        </form>
+</body>
+
+<script>
+    //Event Listener for the login submit button
+    document.getElementById("createUser").addEventListener("submit", function (event) {
+        event.preventDefault();
+        //When clicked attempt to login with the entered info
+        createAccount();
+    });
+
+    /*
+    function togglePassword() {
+        var passwordField = document.getElementById("password");
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+        } else {
+            passwordField.type = "password";
+        }
+    }
+    */
+
+    /** Function will take the data entered by the user (username and password) and call an AWS lambda function
+     *  that will add the user to the AWS db. Several responses from the API can be returned, those being: successful account creation,
+     *  username already exists, API/SQL errors
+     * */
+    function createAccount() {
+        // Get username and password from form fields
+        var username = document.getElementById("username").value;
+        var password = document.getElementById("password").value;
+
+        //Check if the user entered something into the form (exclude whitespaces). Form cannot be empty
+        if (username.trim() === "") {
+            //Alert user of missing value and exit function
+            alert("Please enter a username.");
+            return;
+        }
+        if (password.trim() === "") {
+            //Alert user of missing value and exit function
+            alert("Please enter a password.");
+            return;
+        }
+
+        //The user object from what is currently in the form
+        var requestBody = {
+            username: username,
+            password: password
+        };
+
+        // Convert the request body to JSON
+        var jsonBody = JSON.stringify(requestBody);
+
+        //Gateway url
+        api_url = 'https://ywdchuyoag.execute-api.us-east-1.amazonaws.com/default/createUserFunction'
+
+        // Make POST request to API Gateway endpoint
+        fetch(api_url, {
+            method: 'POST',
+            body: jsonBody,
+        })
+            //Get the response from the API
+            .then(response => response.json())
+            //Handle the reposnse data from the API
+            .then(data => {
+                //If the reponse was succcessfull (200 code)
+                if (data.success) {
+                    // Redirect to the login page to let the user login with their new account
+                    window.location.href = "login.html";
+                }else{
+                    alert("Creating account failed: " + data.message);
+                }
+            })
+            //Catch any errors that are thrown when fetching the API response 
+            .catch(error => {
+                alert("An error has occured: " + data.message);
+                //alert("An error occurred. Please try again later.");
+            });
+    }
+</script>
+
+</html>
